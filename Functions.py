@@ -6,13 +6,13 @@ import numpy as np
 
 
 def F(x,y):
-	return (1+2*math.pi*math.pi)*math.sin(x*math.pi)*math.sin(y*math.pi)
+	return float((1+2*math.pi*math.pi)*math.sin(x*math.pi)*math.sin(y*math.pi))
 
 def G(x,y):
-	return 0
+	return 0.0
 
 def Solution(x,y):
-	return math.sin(x*math.pi)*math.sin(y*math.pi)
+	return float(math.sin(x*math.pi)*math.sin(y*math.pi))
 
 def Dirichlet(msh, physical_tag, g, triplets, B):
 	Dirichlet_Domaine=[]

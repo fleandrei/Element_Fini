@@ -271,6 +271,7 @@ class Mesh:
 							S=Segment([self.Points[nodeTags[k][2*z] -1], self.Points[nodeTags[k][2*z+1] -1]], elementTags[k][z])
 							self.Segments.append(S)
 							self.Tag1DId[Tag1DIdlen-1][1].append(S.id)
+							
 
 					if elementTypes[k]==2:
 						for z in range(0,len(elementTags[k])):
