@@ -5,7 +5,7 @@ import numpy as np
 
 from Maillage import *
 
-def mass_elem(element, triplets, alpha=1.):
+def mass_elem(element, triplets, alpha=1.): #Calcule la matrice de masse élémentaire
 	jac=element.jac()
 	JacsurDouze=jac/12
 	JacsurVingt4=jac/24
@@ -38,21 +38,22 @@ def mass_elem(element, triplets, alpha=1.):
 
 	return triplets
 
+
 def Mass(msh, dim, physical_tag, triplets):
 	Elements=msh.getElements(dim, physical_tag)
 	nbrElem=len(Elements)
-	#print(nbrElem)
 	for i in range(nbrElem):
 		triplets=mass_elem(Elements[i], triplets)
 
 	return triplets
+
 
 def Jacobien(Elem):
 	jac=np.array([[Elem.Points[1].X - Elem.Points[0].X, Elem.Points[2].X - Elem.Points[0].X],[Elem.Points[1].Y - Elem.Points[0].Y, Elem.Points[2].Y - Elem.Points[0].Y]])
 	return jac
 
 
-def Bp(Elem, jacob=None):
+def Bp(Elem, jacob=None):#Calcule la matrice de passage Bp 
 	if jacob==None:
 		jacob=Jacobien(Elem)
 
@@ -63,7 +64,11 @@ def Bp(Elem, jacob=None):
 	BP/detjac
 	return BP
 
-def gradPhi_Chap(i):
+
+
+
+
+def gradPhi_Chap(i): #Calcule le gradient des fonctions de forme du repère parmètrique
 	if i==1:
 		return np.array([-1, -1])
 	elif i==2:
@@ -71,13 +76,15 @@ def gradPhi_Chap(i):
 	else:
 		return np.array([0,1])
 
-def gradPhi(element, i):
+def gradPhi(element, i): #Calcule le gradient des fonctions de forme du repère normale
 	BP=Bp(element)
 
 	gradPhiChap=gradPhi_Chap(i)
 	return BP.dot(gradPhiChap)
 
-def rigi_elem(element, triplets):
+
+
+def rigi_elem(element, triplets): #Calcule la matrice rigide élémentaire
 	area=element.area()
 	BP=Bp(element)
 	BP_prim=BP.transpose()
@@ -106,6 +113,7 @@ def rigi_elem(element, triplets):
 	triplets.append(Z,Z, K[2,2])
 	return triplets
 
+
 def Rigid(msh, physical_tag, triplets):
 	Elements=msh.getElements(2,physical_tag)
 	nbrElem=len(Elements)
@@ -116,12 +124,11 @@ def Rigid(msh, physical_tag, triplets):
 	return triplets
 
 
-def Gener_B(msh, physical_tag, f, order=2):
+def Gener_B(msh, physical_tag, f, order=2): #Génènre le vecteur B
 	Elements=msh.getElements(2,physical_tag)
 	Points=msh.getPoints(2,physical_tag)
 	nbr_elem=len(Elements)
 	nbr_points=len(Points)
-	#print(nbr_points)
 	B=np.zeros(nbr_points)
 
 	for i in range(nbr_elem):#On parcour les triangles
@@ -139,29 +146,5 @@ def Gener_B(msh, physical_tag, f, order=2):
 	return B
 
 
-"""
-Mat_Mass=Triplet()
-print(Mat_Mass)
-M=Mesh()
-M.GmshToMesh("Fonction_Forme.msh")
-#Mat=mass_elem(M.Triangles[0], Mat)
-#print(Mat)
 
-Mat_Mass=Mass(M, 2, 2, Mat_Mass)
-print(Mat_Mass)
-
-
-Matrice_Mass=sparse.coo_matrix(Mat_Mass.data).tocsr()
-U=[1 for i in range(Matrice_Mass.shape[1])]
-print(Matrice_Mass.shape)
-print(sum(Matrice_Mass*U))
-
-
-Mat_Rigi= Triplet()
-print(Rigid(M, 2, Mat_Rigi))
-
-Matrice_Rigid=sparse.coo_matrix(Mat_Rigi.data).tocsr()
-U=[1 for i in range(Matrice_Rigid.shape[1])]
-print(Matrice_Rigid.shape)
-print(sum(Matrice_Rigid*U))"""
 

@@ -5,13 +5,13 @@ import numpy as np
 
 
 
-def F(x,y):
+def F(x,y): #Fonction second membre
 	return float((1+2*math.pi*math.pi)*math.sin(x*math.pi)*math.sin(y*math.pi))
 
-def G(x,y):
+def G(x,y):#Fonction de dirichlet
 	return 0.0
 
-def Solution(x,y):
+def Solution(x,y): #Solution exacte
 	return float(math.sin(x*math.pi)*math.sin(y*math.pi))
 
 def Dirichlet(msh, physical_tag, g, triplets, B):
@@ -33,8 +33,8 @@ def Dirichlet(msh, physical_tag, g, triplets, B):
 
 	for i in range(len(Dirichlet_Domaine)):
 		tag=Dirichlet_Domaine[i].ID_Glob
-		print(tag)
-		nbr_contrib=len(triplets.data[0])
+		#print(tag)
+		nbr_contrib=len(triplets.data[0]) #Nombre de contributions élémentaires dans triplets
 		for j in range(nbr_contrib):
 			if tag==triplets.data[1][0][j]:
 				triplets.data[0][j]=0
@@ -44,7 +44,7 @@ def Dirichlet(msh, physical_tag, g, triplets, B):
 		
 	nbr_contrib=len(triplets.data[0])
 	j=0
-	while j <nbr_contrib:#On supprime les coef qui sont égal à 0
+	while j <nbr_contrib:#On supprime les coef qui sont égaux à 0
 		if triplets.data[0][j]==0:
 			triplets.data[0].pop(j)
 			triplets.data[1][0].pop(j)

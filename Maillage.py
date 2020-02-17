@@ -13,10 +13,11 @@ factory = model.occ
 gmsh.initialize(sys.argv)
 
 
-def gener_Gmsh_carre(msh_name,h, show=False):
+def gener_Gmsh_carre(h, msh_name=None, show=False): # Génére le maillage gmsh avec un pas de "h"
 	model = gmsh.model
 	factory = model.occ
 	model.add(msh_name)
+
 	points = []
 	points.append(model.geo.addPoint(0,0,0, h,0)) #x , y, z, h, tag
 	points.append(model.geo.addPoint(1,0,0, h,1))
@@ -32,16 +33,19 @@ def gener_Gmsh_carre(msh_name,h, show=False):
 	curveloop = model.geo.addCurveLoop([0,1,2,3])
 	disk = model.geo.addPlaneSurface([curveloop])
 
-	gmsh.model.addPhysicalGroup(1, lines, 1)
-	gmsh.model.addPhysicalGroup(2, [disk], 2)
+	gmsh.model.addPhysicalGroup(1, lines, 1) #Contour
+	gmsh.model.addPhysicalGroup(2, [disk], 2)#espace oméga
 
 	gmsh.model.geo.synchronize()
 
 	model.mesh.generate(2)
-	gmsh.write(msh_name)
+
+	if msh_name!=None:
+		gmsh.write(msh_name)
 
 	if show:
 		gmsh.fltk.run()
+
 	
 	gmsh.finalize()
 
@@ -146,7 +150,7 @@ class Triangle:
 	def gaussPoint(self, order=2):
 		Param=[[],[],[]]
 		
-		if order ==1:
+		if order ==1: #Ordre 1: 1 point de quadrature
 			Param[0].append(1./6)
 			Param[1].append((1./3, 1./3))
 			Phi1=Phi_chap(1, 1./3, 1./3)
@@ -157,7 +161,7 @@ class Triangle:
 			Z=Phi1*self.Points[0].Z + Phi2*self.Points[1].Z + Phi3*self.Points[2].Z
 			Param[2].append([X,Y,Z])
 
-		if order==2:
+		if order==2: #Ordre 2: 3 points de quadrature
 
 			Param[0].append(1./6)
 			Param[1].append((1./6, 1./6))
@@ -192,8 +196,6 @@ class Triangle:
 		return Param
 
 
-
-
 def Phi_chap( i, e, n):
 		if i==1:
 			return 1 - e - n
@@ -202,11 +204,15 @@ def Phi_chap( i, e, n):
 		else:
 			return n
 
+
+
 def phiRef( i, param):
 	Res=[]
 	for j in range(len(param)):
 		Res.append(Phi_chap(i, param[j][0], param[j][1]))
 	return Res
+
+
 
 
 
@@ -238,16 +244,12 @@ class Mesh:
 		self.Tag2DId=[]
 		Tag1DIdlen=0 # [(Phyical_Tag1 de dim 1, [indice_Segment1, ..., indice_Segmentn]), ..., (Physical_TagT, [indice_Segment1, ..., indice_Segmentm])]
 		Tag2DIdlen=0# [(Phyical_Tag1 de dim 2, [indice_Triangle1, ..., indice_Trianglen]), ..., (Physical_TagT, [indice_Triangle1, ..., indice_Trianglem])]
-		#print(nodeTag)
 		for i in range(len(nodeTag)):
-			#print(nodeTag[i])
 			self.Points[nodeTag[i] -1]=Point(nodeTag[i], coord[3*i], coord[3*i+1], coord[3*i+2]) #Les points sont à l'indice de leur physical_tag -1
 
-		#print(len(self.Points))
 
 		dimTags=gmsh.model.getPhysicalGroups() #List de paires (dim, tag)
 		LendimTags=len(dimTags)
-		#print(dimTags)
 		for i in range(LendimTags):
 			dim=dimTags[i][0]
 
@@ -259,12 +261,10 @@ class Mesh:
 				Tag2DIdlen +=1
 
 			Tags=gmsh.model.getEntitiesForPhysicalGroup(dim, dimTags[i][1])
-			#print(Tags)
 			for j in range(len(Tags)):
 				elementTypes, elementTags, nodeTags = gmsh.model.mesh.getElements(dim, Tags[j]) #elementTypes: liste des type de dimenssion: 1 si segment, 2 si triangles
 																								#elementTags: Liste de liste: chaque sous liste contient les tags des sous-éléments constituant l'élément
 																								#nodeTags: Liste de liste contenant les tags des points correspondant aux sous-éléments
-				#print(elementTypes)
 				for k in range(len(elementTypes)):
 					if elementTypes[k]==1:
 						for z in range(0,len(elementTags[k])):
@@ -294,7 +294,6 @@ class Mesh:
 			for T in self.Tag2DId:
 				if T[0]==physical_tag:
 					for x in T[1]:
-						#print(x)
 						Res.append(self.Triangles[x])
 					break
 
@@ -303,35 +302,12 @@ class Mesh:
 	def getPoints(self, dim, physical_tag):
 		Res=[]
 		Lelement=self.getElements(dim, physical_tag)
-		#print(len(Lelement))
 		ListTag=[]
 		for E in Lelement:
 			for p in E.Points:
 				if p.ID_Glob not in ListTag:
 					Res.append(p)
 					ListTag.append(p.ID_Glob)
-		#print(ListTag)		
 		return Res
 
 
-
-
-"""
-P1=Point(1,1,1,1)
-P2=Point(2,0,1,0)
-P3=Point(3,3,7,0)
-S1=Segment([P1, P2], 1)
-#print(S1.jac())
-T1=Triangle([P1, P2, P3], 1)
-#print(T1.jac())
-#print(Point.identifiant)
-
-M=Mesh([P1,P2,P3],[S1],[T1])
-M=Mesh()
-M.GmshToMesh("Fonction_Forme.msh")
-print(M.getPoints(1,1)[0])
-print(M.getPoints(1,1)[1])
-#print(M.getElements(2,50)[0].Points[0])
-print(M.Triangles[0].Points[0])
-param=M.Triangles[0].gaussPoint()
-print(Integrale(M,2,F))"""
